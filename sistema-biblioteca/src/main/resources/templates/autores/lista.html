@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autores - Sistema de Biblioteca</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+	rel="stylesheet">
+<link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+	<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+		<div class="container">
+			<a class="navbar-brand fw-bold" th:href="@{/}"><i
+				class="bi bi-book-half me-2"></i>Biblioteca</a>
+			<button class="navbar-toggler" type="button"
+				data-bs-toggle="collapse" data-bs-target="#navbarNav">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav ms-auto">
+					<li class="nav-item"><a class="nav-link" th:href="@{/}"><i
+							class="bi bi-house me-1"></i>Início</a></li>
+					<li class="nav-item"><a class="nav-link" th:href="@{/livros}"><i
+							class="bi bi-journal-bookmark me-1"></i>Livros</a></li>
+					<li class="nav-item"><a class="nav-link active"
+						th:href="@{/autores}"><i class="bi bi-person-lines-fill me-1"></i>Autores</a></li>
+					<li class="nav-item"><a class="nav-link"
+						th:href="@{/emprestimos}"><i
+							class="bi bi-arrow-left-right me-1"></i>Empréstimos</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<main class="container my-4">
+
+		<div id="alertBox" class="alert d-none alert-dismissible fade show"
+			role="alert">
+			<span id="alertMessage"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
+
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<div>
+				<h2 class="fw-bold mb-1">
+					<i class="bi bi-person-lines-fill me-2 text-info"></i>Autores
+				</h2>
+				<p class="text-muted mb-0">Cadastro de autores do acervo</p>
+			</div>
+			<button class="btn btn-info text-white" data-bs-toggle="modal"
+				data-bs-target="#modalAutor" onclick="abrirModalNovo()">
+				<i class="bi bi-plus-lg me-1"></i>Novo Autor
+			</button>
+		</div>
+
+		<div class="card border-0 shadow-sm mb-4">
+			<div class="card-body">
+				<div class="input-group">
+					<span class="input-group-text bg-white"><i
+						class="bi bi-search text-muted"></i></span> <input type="text"
+						id="campoBusca" class="form-control border-start-0"
+						placeholder="Buscar autor por nome..." oninput="filtrarCards()">
+				</div>
+			</div>
+		</div>
+
+		<!-- Cards de autores -->
+		<div class="row g-4" id="listaAutores">
+			<div th:each="autor : ${autores}"
+				class="col-md-6 col-lg-4 autor-card"
+				th:attr="data-nome=${autor.nome},
+                      data-id=${autor.id},
+                      data-nacionalidade=${autor.nacionalidade},
+                      data-biografia=${autor.biografia}">
+				<div class="card border-0 shadow-sm h-100">
+					<div class="card-body">
+						<div class="d-flex align-items-start justify-content-between mb-3">
+							<div class="d-flex align-items-center gap-3">
+								<div
+									class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center"
+									style="width: 48px; height: 48px;">
+									<i class="bi bi-person-fill text-info fs-5"></i>
+								</div>
+								<div>
+									<h6 class="fw-bold mb-0" th:text="${autor.nome}"></h6>
+									<small class="text-muted"
+										th:text="${autor.nacionalidade ?: 'Nacionalidade não informada'}"></small>
+								</div>
+							</div>
+							<span
+								class="badge bg-primary-subtle text-primary border border-primary-subtle">
+								<th:block th:text="${autor.totalLivros}"></th:block> livro(s)
+							</span>
+						</div>
+						<p class="text-muted small mb-3"
+							th:text="${autor.biografia != null and !#strings.isEmpty(autor.biografia) ? #strings.abbreviate(autor.biografia, 100) : 'Sem biografia cadastrada.'}">
+						</p>
+						<div class="d-flex gap-2">
+							<button class="btn btn-sm btn-outline-info flex-fill btn-editar"
+								onclick="abrirModalEditarDoCard(this)">
+								<i class="bi bi-pencil me-1"></i>Editar
+							</button>
+							<button class="btn btn-sm btn-outline-danger btn-excluir"
+								onclick="confirmarExclusaoDoCard(this)">
+								<i class="bi bi-trash"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div th:if="${#lists.isEmpty(autores)}" class="col-12">
+				<div class="text-center text-muted py-5">
+					<i class="bi bi-people fs-1 d-block mb-3"></i>
+					<p>Nenhum autor cadastrado ainda.</p>
+				</div>
+			</div>
+		</div>
+
+	</main>
+
+	<!-- Modal Criar/Editar Autor -->
+	<div class="modal fade" id="modalAutor" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold" id="modalAutorTitulo">Novo
+						Autor</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<input type="hidden" id="autorId">
+					<div class="mb-3">
+						<label class="form-label fw-semibold">Nome <span
+							class="text-danger">*</span></label> <input type="text" id="autorNome"
+							class="form-control" placeholder="Nome completo do autor">
+					</div>
+					<div class="mb-3">
+						<label class="form-label fw-semibold">Nacionalidade</label> <input
+							type="text" id="autorNacionalidade" class="form-control"
+							placeholder="Ex: Brasileiro, Português...">
+					</div>
+					<div class="mb-3">
+						<label class="form-label fw-semibold">Biografia</label>
+						<textarea id="autorBiografia" class="form-control" rows="3"
+							placeholder="Breve biografia do autor..."></textarea>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-bs-dismiss="modal">Cancelar</button>
+					<button type="button" class="btn btn-info text-white"
+						onclick="salvarAutor()">
+						<i class="bi bi-check-lg me-1"></i>Salvar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal de confirmação de exclusão -->
+	<div class="modal fade" id="modalExclusao" tabindex="-1">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header border-0">
+					<h5 class="modal-title fw-bold text-danger">
+						<i class="bi bi-exclamation-triangle me-2"></i>Confirmar
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<p>
+						Deseja excluir o autor <strong id="nomeAutorExcluir"></strong>?
+					</p>
+					<p class="text-muted small">Autores com livros cadastrados não
+						podem ser excluídos.</p>
+				</div>
+				<div class="modal-footer border-0">
+					<button type="button" class="btn btn-secondary btn-sm"
+						data-bs-dismiss="modal">Cancelar</button>
+					<button type="button" class="btn btn-danger btn-sm"
+						onclick="executarExclusao()">Excluir</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<footer class="footer bg-light border-top py-3 mt-5">
+		<div class="container text-center text-muted">
+			<small>Sistema de Biblioteca &copy; 2024</small>
+		</div>
+	</footer>
+
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script th:src="@{/js/app.js}"></script>
+	<script th:src="@{/js/autores.js}"></script>
+</body>
+</html>

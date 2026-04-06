@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Livros - Sistema de Biblioteca</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+	rel="stylesheet">
+<link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+
+	<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+		<div class="container">
+			<a class="navbar-brand fw-bold" th:href="@{/}"><i
+				class="bi bi-book-half me-2"></i>Biblioteca</a>
+			<button class="navbar-toggler" type="button"
+				data-bs-toggle="collapse" data-bs-target="#navbarNav">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav ms-auto">
+					<li class="nav-item"><a class="nav-link" th:href="@{/}"><i
+							class="bi bi-house me-1"></i>Início</a></li>
+					<li class="nav-item"><a class="nav-link active"
+						th:href="@{/livros}"><i class="bi bi-journal-bookmark me-1"></i>Livros</a></li>
+					<li class="nav-item"><a class="nav-link" th:href="@{/autores}"><i
+							class="bi bi-person-lines-fill me-1"></i>Autores</a></li>
+					<li class="nav-item"><a class="nav-link"
+						th:href="@{/emprestimos}"><i
+							class="bi bi-arrow-left-right me-1"></i>Empréstimos</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<main class="container my-4">
+
+		<!-- Alerta de feedback -->
+		<div id="alertBox" class="alert d-none alert-dismissible fade show"
+			role="alert">
+			<span id="alertMessage"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
+
+		<!-- Cabeçalho da página -->
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<div>
+				<h2 class="fw-bold mb-1">
+					<i class="bi bi-journal-bookmark me-2 text-primary"></i>Livros
+				</h2>
+				<p class="text-muted mb-0">Gerenciamento do acervo de livros</p>
+			</div>
+			<button class="btn btn-primary" data-bs-toggle="modal"
+				data-bs-target="#modalLivro" onclick="abrirModalNovo()">
+				<i class="bi bi-plus-lg me-1"></i>Novo Livro
+			</button>
+		</div>
+
+		<!-- Barra de busca -->
+		<div class="card border-0 shadow-sm mb-4">
+			<div class="card-body">
+				<div class="row g-2">
+					<div class="col-md-8">
+						<div class="input-group">
+							<span class="input-group-text bg-white"><i
+								class="bi bi-search text-muted"></i></span> <input type="text"
+								id="campoBusca" class="form-control border-start-0"
+								placeholder="Buscar livro por título..."
+								oninput="filtrarTabela()">
+						</div>
+					</div>
+					<div class="col-md-4">
+						<select class="form-select" id="filtroDisponibilidade"
+							onchange="filtrarTabela()">
+							<option value="">Todos os livros</option>
+							<option value="true">Disponíveis</option>
+							<option value="false">Emprestados</option>
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Tabela de livros -->
+		<div class="card border-0 shadow-sm">
+			<div class="card-body p-0">
+				<div class="table-responsive">
+					<table class="table table-hover mb-0" id="tabelaLivros">
+						<thead class="table-light">
+							<tr>
+								<th>#</th>
+								<th>Título</th>
+								<th>Autor</th>
+								<th>ISBN</th>
+								<th>Ano</th>
+								<th>Editora</th>
+								<th>Status</th>
+								<th class="text-center">Ações</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="livro : ${livros}"
+								th:attr="data-titulo=${livro.titulo},
+                                     data-disponivel=${livro.disponivel},
+                                     data-id=${livro.id},
+                                     data-isbn=${livro.isbn},
+                                     data-ano=${livro.anoPublicacao},
+                                     data-editora=${livro.editora},
+                                     data-autor-id=${livro.autorId}">
+								<td th:text="${livro.id}" class="text-muted small"></td>
+								<td class="fw-semibold" th:text="${livro.titulo}"></td>
+								<td th:text="${livro.nomeAutor}"></td>
+								<td class="text-muted small" th:text="${livro.isbn ?: '-'}"></td>
+								<td th:text="${livro.anoPublicacao ?: '-'}"></td>
+								<td th:text="${livro.editora ?: '-'}"></td>
+								<td><span th:if="${livro.disponivel}"
+									class="badge bg-success-subtle text-success border border-success-subtle">
+										<i class="bi bi-check-circle me-1"></i>Disponível
+								</span> <span th:unless="${livro.disponivel}"
+									class="badge bg-warning-subtle text-warning border border-warning-subtle">
+										<i class="bi bi-arrow-left-right me-1"></i>Emprestado
+								</span></td>
+								<td class="text-center">
+									<button class="btn btn-sm btn-outline-primary me-1 btn-editar"
+										onclick="abrirModalEditarDaLinha(this)">
+										<i class="bi bi-pencil"></i>
+									</button>
+									<button class="btn btn-sm btn-outline-danger btn-excluir"
+										onclick="confirmarExclusaoDaLinha(this)">
+										<i class="bi bi-trash"></i>
+									</button>
+								</td>
+							</tr>
+							<tr th:if="${#lists.isEmpty(livros)}">
+								<td colspan="8" class="text-center text-muted py-4"><i
+									class="bi bi-inbox fs-3 d-block mb-2"></i> Nenhum livro
+									cadastrado ainda.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+	</main>
+
+	<!-- Modal para Criar/Editar Livro -->
+	<div class="modal fade" id="modalLivro" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold" id="modalLivroTitulo">Novo
+						Livro</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<input type="hidden" id="livroId">
+					<div class="mb-3">
+						<label class="form-label fw-semibold">Título <span
+							class="text-danger">*</span></label> <input type="text" id="livroTitulo"
+							class="form-control" placeholder="Ex: Dom Quixote">
+					</div>
+					<div class="mb-3">
+						<label class="form-label fw-semibold">Autor <span
+							class="text-danger">*</span></label> <select id="livroAutorId"
+							class="form-select">
+							<option value="">Selecione um autor...</option>
+							<option th:each="autor : ${autores}" th:value="${autor.id}"
+								th:text="${autor.nome}"></option>
+						</select>
+					</div>
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label class="form-label fw-semibold">ISBN</label> <input
+								type="text" id="livroIsbn" class="form-control"
+								placeholder="978-...">
+						</div>
+						<div class="col-md-6 mb-3">
+							<label class="form-label fw-semibold">Ano de Publicação</label> <input
+								type="number" id="livroAno" class="form-control"
+								placeholder="2024" min="1000" max="2100">
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label fw-semibold">Editora</label> <input
+							type="text" id="livroEditora" class="form-control"
+							placeholder="Ex: Companhia das Letras">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-bs-dismiss="modal">Cancelar</button>
+					<button type="button" class="btn btn-primary"
+						onclick="salvarLivro()">
+						<i class="bi bi-check-lg me-1"></i>Salvar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal de confirmação de exclusão -->
+	<div class="modal fade" id="modalExclusao" tabindex="-1">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header border-0">
+					<h5 class="modal-title fw-bold text-danger">
+						<i class="bi bi-exclamation-triangle me-2"></i>Confirmar
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<p>
+						Deseja excluir o livro <strong id="nomeLivroExcluir"></strong>?
+					</p>
+					<p class="text-muted small">Esta ação não pode ser desfeita.</p>
+				</div>
+				<div class="modal-footer border-0">
+					<button type="button" class="btn btn-secondary btn-sm"
+						data-bs-dismiss="modal">Cancelar</button>
+					<button type="button" class="btn btn-danger btn-sm"
+						onclick="executarExclusao()">Excluir</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<footer class="footer bg-light border-top py-3 mt-5">
+		<div class="container text-center text-muted">
+			<small>Sistema de Biblioteca 2026 &copy; Autor: Deivid
+				Andrade | Spring Boot + Thymeleaf + Bootstrap</small>
+		</div>
+	</footer>
+
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script th:src="@{/js/app.js}"></script>
+	<script th:src="@{/js/livros.js}"></script>
+</body>
+</html>

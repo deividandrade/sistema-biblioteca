@@ -2,6 +2,10 @@
 
 Sistema web completo para gerenciamento de biblioteca, com CRUD de livros e autores, controle de empréstimos e interface responsiva.
 
+
+
+<img width="1906" height="990" alt="01" src="https://github.com/user-attachments/assets/5480a818-564a-4d54-ba3b-8815eb439fdf" />
+
 ---
 
 ## 🛠️ Tecnologias

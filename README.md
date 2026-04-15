@@ -169,3 +169,9 @@ Autor (1) ──────< Livro (N)
 - Um **Autor** pode ter vários **Livros**
 - Um **Livro** pode ter vários **Empréstimos** (histórico)
 - Um **Empréstimo** tem status: `ATIVO`, `DEVOLVIDO` ou `ATRASADO`
+
+---
+
+## 👨‍💻 Autor
+
+Desenvolvido por **Deivid Andrade**
